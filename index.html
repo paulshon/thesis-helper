@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>논문 작성 도우미 v19 — BERT+LLM AI 분석</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="titlebar">
+  <div class="tl-row">
+    <div class="tl tl-r"></div><div class="tl tl-y"></div><div class="tl tl-g"></div>
+  </div>
+  <div class="tb-title">📄 논문 작성 도우미 v19 — BERT+LLM AI 분석</div>
+  <div class="ai-status" onclick="App.checkAI()" title="AI 서버 상태 확인">
+    <div class="ai-dot loading" id="ai-dot"></div>
+    <span id="ai-txt">AI 서버 확인 중...</span>
+  </div>
+  <div class="tb-ver">v19.0</div>
+</div>
+
+<div id="menubar">
+  <div class="mi" id="m-file" onclick="App.toggleMenu('file')">파일
+    <div class="md">
+      <div class="mdi hd">프로젝트</div>
+      <div class="mdi" onclick="App.newProject()">새 프로젝트<span class="sc">⌘N</span></div>
+      <div class="mdi" onclick="App.loadProject()">프로젝트 불러오기<span class="sc">⌘O</span></div>
+      <div class="md-sep"></div>
+      <div class="mdi" onclick="App.saveProject()">저장<span class="sc">⌘S</span></div>
+      <div class="mdi" onclick="App.exportDoc()">TXT 내보내기<span class="sc">⌘E</span></div>
+      <div class="md-sep"></div>
+      <div class="mdi hd">논문 파일 불러오기</div>
+      <div class="mdi" onclick="App.openFileDialog()">📂 PDF/DOCX 파일 열기<span class="sc">⌘F</span></div>
+      <div class="md-sep"></div>
+      <div class="mdi danger" onclick="App.confirmExit()">종료</div>
+    </div>
+  </div>
+  <div class="mi" id="m-new" onclick="App.toggleMenu('new')">새 논문 작성
+    <div class="md">
+      <div class="mdi hd">기초 섹션</div>
+      <div class="mdi" onclick="App.goSec(0);App.switchMode('new')">연구배경<span class="sc">⌘1</span></div>
+      <div class="mdi" onclick="App.goSec(1);App.switchMode('new')">연구목적<span class="sc">⌘2</span></div>
+      <div class="md-sep"></div>
+      <div class="mdi hd">방법론적 장치</div>
+      <div class="mdi" onclick="App.goSec(2);App.switchMode('new')">연구문제<span class="sc">⌘3</span></div>
+      <div class="mdi" onclick="App.goSec(3);App.switchMode('new')">연구질문<span class="sc">⌘4</span></div>
+      <div class="mdi" onclick="App.goSec(4);App.switchMode('new')">가설 수립<span class="sc">⌘5</span></div>
+      <div class="mdi" onclick="App.goSec(5);App.switchMode('new')">이론적 배경<span class="sc">⌘6</span></div>
+      <div class="md-sep"></div>
+      <div class="mdi hd">본론 섹션</div>
+      <div class="mdi" onclick="App.goSec(6);App.switchMode('new')">문헌연구<span class="sc">⌘7</span></div>
+      <div class="mdi" onclick="App.goSec(7);App.switchMode('new')">연구방법<span class="sc">⌘8</span></div>
+      <div class="mdi" onclick="App.goSec(8);App.switchMode('new')">연구결과</div>
+      <div class="mdi" onclick="App.goSec(9);App.switchMode('new')">논의</div>
+      <div class="mdi" onclick="App.goSec(10);App.switchMode('new')">결론</div>
+      <div class="md-sep"></div>
+      <div class="mdi hd">📋 5문단 미시구조 작성</div>
+      <div class="mdi" onclick="App.startParaMode('bg')">연구배경 — 5문단 작성</div>
+      <div class="mdi" onclick="App.startParaMode('purpose')">연구목적 — 5문단 작성</div>
+      <div class="mdi" onclick="App.goSec(2);App.switchMode('new');App.paraMode='problem';App.curPara=0;App.renderParaEditor('problem');">📋 연구문제 5문단 작성</div>
+      <div class="mdi" onclick="App.goSec(3);App.switchMode('new');App.paraMode='rq';App.curPara=0;App.renderParaEditor('rq');">📋 연구질문 5문단 작성</div>
+      <div class="mdi" onclick="App.goSec(4);App.switchMode('new');App.paraMode='hypo';App.curPara=0;App.renderParaEditor('hypo');">📋 가설 수립 5문단 작성</div>
+      <div class="md-sep"></div>
+      <div class="mdi" onclick="App.genAll()">전체 자동 생성</div>
+      <div class="mdi" onclick="App.clearSec()">현재 섹션 초기화</div>
+    </div>
+  </div>
+  <div class="mi" id="m-check" onclick="App.toggleMenu('check')">논문 분석·첨삭
+    <div class="md">
+      <div class="mdi hd">파일 불러오기</div>
+      <div class="mdi" onclick="App.switchMode('check');App.switchSub('import')">📂 PDF/DOCX 불러오기</div>
+      <div class="md-sep"></div>
+      <div class="mdi hd">전체 분석</div>
+      <div class="mdi" onclick="App.switchMode('check');App.runOverall()">📊 논문 전체 분석</div>
+      <div class="mdi" onclick="App.switchMode('check');App.runSecBySecCheck()">🔍 섹션별 상세 분석 + 개선문장</div>
+      <div class="mdi" onclick="App.switchMode('check');App.runFullLLMCheck()">✨ 전체 LLM 첨삭 실행</div>
+      <div class="md-sep"></div>
+      <div class="mdi hd">미시구조 분석 ★</div>
+      <div class="mdi" onclick="App.switchMode('check');App.runMicroAnalysis('bg')">🔬 연구배경 5문단 (P1~P5) 분석</div>
+      <div class="mdi" onclick="App.switchMode('check');App.runMicroAnalysis('purpose')">🔬 연구목적 5문단 (P1~P5) 분석</div>
+      <div class="mdi" onclick="App.switchMode('check');App.runMicroAnalysis('problem')">🔬 연구문제 5문단 (P1~P5) 분석</div>
+      <div class="mdi" onclick="App.switchMode('check');App.runMicroAnalysis('rq')">🔬 연구질문 5문단 (P1~P5) 분석</div>
+      <div class="mdi" onclick="App.switchMode('check');App.runMicroAnalysis('hypo')">🔬 가설 5문단 (P1~P5) 분석</div>
+      <div class="mdi" onclick="App.switchMode('check');App.runMicroAnalysis('theory')">🔬 이론적 배경 (S1~S5) 분석</div>
+      <div class="md-sep"></div>
+      <div class="mdi hd">LLM 분석</div>
+      <div class="mdi" onclick="App.switchMode('check');App.runImportedLLMAnalysis()">🤖 불러온 논문 LLM 분석 (순수 AI 기준)</div>
+      <div class="md-sep"></div>
+      <div class="mdi" onclick="App.runSecAnalysis()">현재 섹션 탈락패턴 검사</div>
+      <div class="mdi" onclick="App.runSecLLM()">✨ 현재 섹션 LLM 첨삭</div>
+    </div>
+  </div>
+  <div class="mi" id="m-ai" onclick="App.toggleMenu('ai')">AI 엔진
+    <div class="md">
+      <div class="mdi hd">서버 관리</div>
+      <div class="mdi" onclick="App.checkAI()">🔄 서버 상태 확인</div>
+      <div class="mdi" onclick="App.openModal('AI 서버 시작 방법','<div style=\'font-size:13px;line-height:2;\'>1. 터미널 열기<br>2. 프로젝트 폴더로 이동<br>3. <code>python python/server.py</code><br><br>또는:<br>Windows: <code>start_server.bat</code><br>Mac/Linux: <code>./start_server.sh</code><br><br>서버 주소: <code>http://localhost:8765</code></div>')">📖 서버 시작 방법</div>
+      <div class="md-sep"></div>
+      <div class="mdi hd">🤖 LLM 모델 선택 [v19]</div>
+      <div class="mdi" onclick="App.openModelSelector()">⚙️ 모델 선택 / 변경</div>
+      <div class="mdi" id="m-active-model" style="font-size:11px;color:var(--t3);pointer-events:none;">활성 모델: 확인 중...</div>
+    </div>
+  </div>
+  <div class="mi" id="m-guide" onclick="App.toggleMenu('guide')">가이드
+    <div class="md">
+      <div class="mdi" onclick="App.switchSub('guide')">📘 작성 가이드</div>
+      <div class="mdi" onclick="App.switchSub('terms')">📖 용어 해설 (30선)</div>
+      <div class="md-sep"></div>
+      <div class="mdi" onclick="App.openMicroGuide('bg')">📋 연구배경 5문단 미시구조 가이드</div>
+      <div class="mdi" onclick="App.openMicroGuide('purpose')">📋 연구목적 5문단 미시구조 가이드</div>
+      <div class="mdi" onclick="App.openMicroGuide('problem')">📋 연구문제 5문단 미시구조 가이드</div>
+      <div class="mdi" onclick="App.openMicroGuide('rq')">📋 연구질문 5문단 미시구조 가이드</div>
+      <div class="mdi" onclick="App.openMicroGuide('hypo')">📋 가설 수립 5문단 미시구조 가이드</div>
+      <div class="mdi" onclick="App.openMicroGuide('theory')">📋 이론적 배경 미시구조 가이드</div>
+      <div class="md-sep"></div>
+      <div class="mdi" onclick="App.openDeviceMatrix()">📊 8가지 장치 선택 매트릭스</div>
+    </div>
+  </div>
+</div>
+
+<div id="shell">
+  <div id="sidebar">
+    <div class="sb-logo">
+      <div class="sb-logo-ico">📝</div>
+      <div><div class="sb-logo-text">논문 도우미</div><div class="sb-logo-sub">v19 · BERT+LLM+EXAONE</div></div>
+    </div>
+    <div class="sb-sec">
+      <div class="sb-lbl">프로젝트</div>
+      <div class="ig"><input type="text" id="proj-title" placeholder="연구 제목..." style="font-size:12px;"></div>
+      <div class="ig">
+        <select id="res-type" style="font-size:12px;">
+          <option value="">연구 유형...</option>
+          <option value="qual">질적 연구</option>
+          <option value="quant">양적 연구</option>
+          <option value="mixed">혼합 연구</option>
+          <option value="review">문헌 리뷰</option>
+          <option value="case">사례 연구</option>
+        </select>
+      </div>
+    </div>
+    <div class="sb-div"></div>
+    <div class="sb-sec">
+      <div class="sb-lbl">논문 구조 (D1~D7+)</div>
+      <div id="sec-list"></div>
+    </div>
+    <div class="sb-div"></div>
+    <div class="sb-sec">
+      <div class="sb-lbl">빠른 실행</div>
+      <div class="si" onclick="App.switchMode('new');App.switchSub('editor')"><div class="si-ico">✏️</div><span>새 논문 작성</span></div>
+      <div class="si" onclick="App.switchMode('check')"><div class="si-ico">🔍</div><span>논문 분석·첨삭</span></div>
+      <div class="si" onclick="App.openFileDialog()"><div class="si-ico">📂</div><span>파일 불러오기</span></div>
+      <div class="si" onclick="App.switchSub('guide')"><div class="si-ico">📘</div><span>작성 가이드</span></div>
+      <div class="si" onclick="App.switchSub('terms')"><div class="si-ico">📖</div><span>용어 해설</span></div>
+    </div>
+    <div class="sb-foot">
+      <div class="pg-row"><span>작성 완성도</span><span id="pg-pct">0%</span></div>
+      <div class="pg-bar"><div class="pg-fill" id="pg-fill" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <div id="main">
+    <div id="mode-bar">
+      <div class="mtab active" data-mode="new" onclick="App.switchMode('new')"><div class="mtab-dot"></div>새 논문 작성</div>
+      <div class="mtab" data-mode="check" onclick="App.switchMode('check')"><div class="mtab-dot"></div>기존 논문 분석·첨삭</div>
+    </div>
+
+    <div id="sub-new" class="sub-bar">
+      <div class="stab active" data-tab="editor"   onclick="App.switchSub('editor')">편집기</div>
+      <div class="stab"        data-tab="analysis" onclick="App.switchSub('analysis')">BERT 분석</div>
+      <div class="stab"        data-tab="guide"    onclick="App.switchSub('guide')">작성 가이드</div>
+      <div class="stab"        data-tab="terms"    onclick="App.switchSub('terms')">용어 해설</div>
+    </div>
+
+    <div id="sub-check" class="sub-bar" style="display:none;">
+      <div class="stab active" data-tab="import"    onclick="App.switchSub('import')">파일 불러오기</div>
+      <div class="stab"        data-tab="pdfview"   onclick="App.switchSub('pdfview')">📄 PDF 뷰어</div>
+      <div class="stab"        data-tab="textview"  onclick="App.switchSub('textview')">📄 텍스트 변환</div>
+      <div class="stab"        data-tab="overall"   onclick="App.switchSub('overall')">전체 분석</div>
+      <div class="stab"        data-tab="micro"     onclick="App.switchSub('micro')">미시구조</div>
+      <div class="stab"        data-tab="sentence"  onclick="App.switchSub('sentence')">문장별분석</div>
+      <div class="stab"        data-tab="bertcheck" onclick="App.switchSub('bertcheck')">BERT</div>
+      <div class="stab"        data-tab="guide"     onclick="App.switchSub('guide')">가이드</div>
+      <div class="stab"        data-tab="terms"     onclick="App.switchSub('terms')">용어 해설</div>
+    </div>
+
+    <!-- EDITOR -->
+    <div id="v-editor" class="view active">
+      <div class="vh">
+        <div class="vhb">
+          <span class="vhb-badge" id="sec-badge" style="background:rgba(124,106,247,.2);color:#7c6af7;">Ch.1</span>
+          <span class="vhb-title" id="sec-title">연구배경</span>
+          <span class="vhb-role"  id="sec-role">WHY</span>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn" id="para-mode-btn" style="display:none;">📋 5문단 미시구조</button>
+          <button class="btn" onclick="App.switchSub('guide')">📘 가이드</button>
+          <button class="btn" onclick="App.runSecAnalysis()">🔍 분석</button>
+          <button class="btn btn-p btn-gen" onclick="App.generateText()">✨ 생성 ⌘↩</button>
+        </div>
+      </div>
+      <div class="panel-wrap">
+        <div class="pl">
+          <div class="ig"><div class="il">연구 주제 / 핵심 키워드</div><input type="text" id="var-topic" placeholder="예: 생성형 AI의 예술 창작"/></div>
+          <div class="vg" id="var-grid"></div>
+          <div class="sep"></div>
+          <div class="ig"><div class="il">문장 패턴 선택</div><div class="pt-list" id="pat-list"></div></div>
+          <div class="sep"></div>
+          <div class="ig"><div class="il">직접 입력 / 수동 편집</div><textarea id="direct-inp" placeholder="직접 문장을 입력하거나 패턴을 선택하세요..." rows="5"></textarea></div>
+          <div class="sep"></div>
+          <div class="ig"><div class="il">AI 엔진 상태</div><div id="ai-panel" style="font-size:12px;color:var(--t3);">확인 중...</div></div>
+        </div>
+        <div class="pr">
+          <div class="oh">
+            <span class="ot">생성 결과 / AI 첨삭</span>
+            <div style="display:flex;gap:6px;">
+              <button class="btn btn-sm" onclick="App.copyOutput()">복사</button>
+              <button class="btn btn-sm" onclick="App.clearOutput()">초기화</button>
+            </div>
+          </div>
+          <div class="os" id="out-scroll"><div class="empty"><div class="ei">✍️</div><div class="et">패턴을 선택하고 변수를 입력한 후<br>문장 생성 버튼을 누르세요</div></div></div>
+          <div class="sbar"><div class="sd idle" id="st-dot"></div><span id="st-txt">대기 중</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ANALYSIS -->
+    <div id="v-analysis" class="view">
+      <div class="aw" id="analysis-content">
+        <div class="empty"><div class="ei">🔍</div><div class="et">편집기에서 "분석" 버튼을 눌러<br>현재 섹션의 BERT 평가와 탈락패턴을 검사하세요</div></div>
+      </div>
+    </div>
+
+    <!-- IMPORT -->
+    <div id="v-import" class="view">
+      <div class="vh">
+        <div class="vhb">
+          <span class="vhb-badge" style="background:rgba(96,165,250,.15);color:var(--blue)">IMPORT</span>
+          <span class="vhb-title">논문 파일 불러오기</span>
+        </div>
+        <button class="btn btn-p" onclick="App.openFileDialog()">📂 파일 열기</button>
+      </div>
+      <div class="aw">
+        <input type="file" id="fi" accept=".pdf,.docx,.doc,.txt" style="display:none;">
+        <div id="dz" class="dz">
+          <div class="dz-ico">📄</div>
+          <div class="dz-t">PDF / DOCX / TXT 파일을 드래그하거나 클릭하여 업로드</div>
+          <div class="dz-s">
+            <span class="ftb">PDF</span><span class="ftb">DOCX</span><span class="ftb">DOC</span><span class="ftb">TXT</span>
+          </div>
+        </div>
+        <div id="imp-prev" style="margin-top:20px;"></div>
+      </div>
+    </div>
+
+    <!-- PDF VIEWER (v15: 수정할 문장 하위패널 포함) -->
+    <div id="v-pdfview" class="view">
+      <div class="vh">
+        <div class="vhb">
+          <span class="vhb-badge" style="background:rgba(248,113,113,.15);color:var(--red)">PDF 뷰어</span>
+          <span class="vhb-title" id="pdf-view-title">PDF 파일 열람</span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <button class="btn" onclick="App.pdfPrevPage()">◀ 이전</button>
+          <span style="font-size:12px;color:var(--t2);" id="pdf-page-info">-</span>
+          <button class="btn" onclick="App.pdfNextPage()">다음 ▶</button>
+          <button class="btn btn-sm" onclick="App.pdfZoom(0.2)">확대 +</button>
+          <button class="btn btn-sm" onclick="App.pdfZoom(-0.2)">축소 −</button>
+          <button class="btn btn-p" onclick="App.openFileDialog()">📂 다른 파일</button>
+          <button class="btn btn-sm" style="background:rgba(96,165,250,.2);color:var(--blue);border-color:var(--blue);" onclick="App.switchSub('textview')">📄 텍스트 변환</button>
+          <button class="btn btn-sm" style="background:rgba(250,204,21,.2);color:#92400e;border-color:#f59e0b;font-weight:700;" onclick="App.toggleCorrectionPanel()">🟡 수정할 문장</button>
+        </div>
+      </div>
+      <!-- [v15] 수정할 문장 패널 -->
+      <div id="v-correction-panel" style="display:none;max-height:320px;overflow-y:auto;border-bottom:2px solid #f59e0b;background:#fffbeb;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:#fef3c7;border-bottom:1px solid #fde68a;">
+          <span style="font-size:13px;font-weight:700;color:#92400e;">🟡 수정이 필요한 문장 목록</span>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-sm" onclick="App.runCorrectionAnalysis()">🔄 재분석</button>
+            <button class="btn btn-sm" onclick="App.toggleCorrectionPanel()">✕ 닫기</button>
+          </div>
+        </div>
+        <div id="correction-list" style="padding:12px 16px;font-size:12px;color:#78350f;">파일을 불러온 후 분석하면 수정이 필요한 문장이 표시됩니다.</div>
+      </div>
+      <div id="pdf-viewer-wrap" style="flex:1;overflow:auto;background:#525659;display:flex;flex-direction:column;align-items:center;padding:20px;gap:16px;">
+        <div class="empty"><div class="ei">📄</div><div class="et">PDF 파일을 불러오면<br>여기서 직접 열람할 수 있습니다</div></div>
+      </div>
+    </div>
+
+    <!-- TEXT VIEWER [v17] -->
+    <div id="v-textview" class="view">
+      <div class="vh">
+        <div class="vhb">
+          <span class="vhb-badge" style="background:rgba(96,165,250,.15);color:var(--blue)">TEXT VIEWER</span>
+          <span class="vhb-title" id="text-view-title">PDF 텍스트 변환 뷰어</span>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn" onclick="App.downloadExtractedText()">📥 텍스트 다운로드</button>
+          <button class="btn" onclick="App.copyExtractedText()">📋 전체 복사</button>
+          <button class="btn btn-sm" onclick="App.textViewZoom(1.1)">텍스트 확대 +</button>
+          <button class="btn btn-sm" onclick="App.textViewZoom(0.9)">텍스트 축소 −</button>
+          <button class="btn btn-p" onclick="App.switchSub('pdfview')">◀ PDF 뷰어로</button>
+        </div>
+      </div>
+      <div class="aw" id="text-viewer-wrap"
+           style="flex:1;overflow-y:auto;padding:20px;background:#f8f9fa;font-family:monospace;font-size:13px;line-height:1.6;white-space:pre-wrap;word-break:break-word;color:#333;">
+        <div class="empty">
+          <div class="ei">📄</div>
+          <div class="et">PDF 파일을 불러온 후<br>여기서 추출된 텍스트를 확인할 수 있습니다</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OVERALL -->
+    <div id="v-overall" class="view">
+      <div class="vh">
+        <div class="vhb">
+          <span class="vhb-badge" style="background:rgba(248,113,113,.15);color:var(--red)">ANALYSIS</span>
+          <span class="vhb-title">논문 전체 분석</span>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn" onclick="App.runOverall()">🔄 재분석</button>
+          <button class="btn btn-p" onclick="App.exportDoc()">내보내기</button>
+          <button class="btn btn-sm" style="background:rgba(96,165,250,.2);color:var(--blue);border-color:var(--blue);" onclick="App.analyzeExtractedText('overall')">📄 변환 텍스트 분석</button>
+        </div>
+      </div>
+      <div class="aw" id="overall-content">
+        <div class="empty"><div class="ei">📊</div><div class="et">파일을 불러온 후<br>"논문 전체 분석" 버튼을 누르세요</div></div>
+      </div>
+    </div>
+
+    <!-- MICRO -->
+    <div id="v-micro" class="view">
+      <div class="vh">
+        <div class="vhb">
+          <span class="vhb-badge" style="background:rgba(96,165,250,.15);color:var(--blue)">MICRO</span>
+          <span class="vhb-title">미시구조 분석</span>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-p" onclick="App.runMicroAnalysis('bg')">🔬 연구배경</button>
+          <button class="btn" onclick="App.runMicroAnalysis('purpose')">🔬 연구목적</button>
+          <button class="btn" style="color:#a78bfa;border-color:#a78bfa;" onclick="App.runMicroAnalysis('problem')">🔬 연구문제</button>
+          <button class="btn" style="color:#34d399;border-color:#34d399;" onclick="App.runMicroAnalysis('rq')">🔬 연구질문</button>
+          <button class="btn" style="color:#f59e0b;border-color:#f59e0b;" onclick="App.runMicroAnalysis('hypo')">🔬 가설</button>
+          <button class="btn" style="color:#ec4899;border-color:#ec4899;" onclick="App.runMicroAnalysis('theory')">🔬 이론배경</button>
+          <button class="btn btn-sm" style="background:rgba(96,165,250,.2);color:var(--blue);border-color:var(--blue);" onclick="App.analyzeExtractedText('micro')">📄 변환 텍스트 분석</button>
+        </div>
+      </div>
+      <div class="aw" id="micro-content">
+        <div class="empty"><div class="ei">🔬</div><div class="et">섹션을 선택하면<br>P1~P5 미시구조를 분석합니다</div></div>
+      </div>
+    </div>
+
+    <!-- SENTENCE -->
+    <div id="v-sentence" class="view">
+      <div class="vh">
+        <div class="vhb">
+          <span class="vhb-badge" style="background:rgba(52,211,153,.15);color:var(--green)">문장별</span>
+          <span class="vhb-title" id="sentence-title">문장별 분석</span>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-sm" style="background:rgba(96,165,250,.2);color:var(--blue);border-color:var(--blue);" onclick="App.analyzeExtractedText('sentence')">📄 변환 텍스트 분석</button>
+        </div>
+      </div>
+      <div class="aw" id="sentence-content">
+        <div class="empty"><div class="ei">🔍</div><div class="et">미시구조 분석 후<br>각 문단을 클릭하면 문장별 분석을 볼 수 있습니다</div></div>
+      </div>
+    </div>
+
+    <!-- LLM 분석 [v23] -->
+    <div id="v-bertcheck" class="view">
+      <div class="vh">
+        <div class="vhb">
+          <span class="vhb-badge" style="background:rgba(52,211,153,.15);color:var(--green)">LLM 분석</span>
+          <span class="vhb-title">불러온 논문 LLM 분석 — 순수 AI 기준</span>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-p" onclick="App.runImportedLLMAnalysis()">🤖 LLM 전체 분석</button>
+          <button class="btn btn-sm" style="background:rgba(96,165,250,.2);color:var(--blue);border-color:var(--blue);" onclick="App.analyzeExtractedText('bert')">📄 변환 텍스트 분석</button>
+        </div>
+      </div>
+      <div class="aw" id="bertcheck-content">
+        <div class="empty"><div class="ei">🤖</div><div class="et">파일을 불러온 후<br>LLM 분석 버튼을 누르세요<br><small style="color:var(--t3);">가이드 기준 없이 순수 LLM으로 평가</small></div></div>
+      </div>
+    </div>
+
+    <!-- GUIDE -->
+    <div id="v-guide" class="view">
+      <div class="gw">
+        <div class="gnav" id="guide-nav"></div>
+        <div class="gb" id="guide-body"></div>
+      </div>
+    </div>
+
+    <!-- TERMS -->
+    <div id="v-terms" class="view">
+      <div class="tw">
+        <div class="ig"><input type="text" id="terms-sq" placeholder="학술 용어 검색..." oninput="App.termsSearch(this.value)"/></div>
+        <div class="tf-row" id="tf-row"></div>
+        <div class="tg" id="terms-grid"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="notif" id="notif"></div>
+<div class="mo" id="m-overlay" onclick="App.closeModal(event)">
+  <div class="md-box">
+    <div class="md-h"><span class="md-ht" id="m-title"></span><span class="md-hc" onclick="App.closeModalD()">×</span></div>
+    <div id="m-body"></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="data/sections.js"></script>
+<script src="data/terms.js"></script>
+<script src="js/app.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() { App.init(); });
+</script>
+</body>
+</html>
